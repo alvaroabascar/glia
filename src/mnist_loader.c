@@ -9,7 +9,10 @@
 TrainData mnist_load(char *path);
 void *concat(char *str1, char *str2);
 
-uint8_t *load_labels(char *path, int *n_items)
+/* Load MNIST labels, given the file path. Return them as an "array"
+ * of uint8
+ */
+double *load_labels(char *path, int *n_items)
 {
 	int32_t magic;
 	void *labels;
@@ -30,11 +33,14 @@ uint8_t *load_labels(char *path, int *n_items)
 	return labels;
 }
 
-uint8_t **load_images(char *path, int *n_items, int *n_rows, int *n_cols)
+/* Load the MNIST images, given the file path. Return them as an
+ * "array of matrices".
+ */
+double **load_images(char *path, int *n_items, int *n_rows, int *n_cols)
 {
 	int i, item;
 	int32_t magic;
-	uint8_t **images;
+	double **inputs;
 	FILE *stream = fopen(path, "r");
 	if (!stream) {
 		fprintf(stderr, "Could not load file %s. Aborting :(.\n", path);
@@ -49,22 +55,25 @@ uint8_t **load_images(char *path, int *n_items, int *n_rows, int *n_cols)
 		*n_rows = __bswap_32(*n_rows);
 		*n_cols = __bswap_32(*n_cols);
 	}
-	images = malloc(sizeof(void **) * (*n_items));
+	inputs = malloc(sizeof(void **) * (*n_items));
 	for (i = 0; i < *n_items; i++) {
-		images[i] = malloc((*n_cols) * (*n_rows));
-		fread(images[i], 1, (*n_cols) * (*n_rows), stream);
+		inputs[i] = malloc((*n_cols) * (*n_rows));
+		fread(inputs[i], 1, (*n_cols) * (*n_rows), stream);
 	}
 	fclose(stream);
-	return images;
+	return inputs;
 }
 
+/* Load the mnist dataset given the folder path & result a struct with
+ * all the data.
+ */
 TrainData mnist_load(char *path)
 {
 	int32_t n_train, n_test, n_rows, n_cols;
-	uint8_t *labels_train;
-	uint8_t *labels_test;
-	uint8_t **images_train;
-	uint8_t **images_test;
+	double *labels_train;
+	double *labels_test;
+	double **images_train;
+	double **images_test;
 	char *train_images_path = concat(path, "/train-images-idx3-ubyte");
 	char *train_labels_path = concat(path, "/train-labels-idx1-ubyte");
 	char *test_labels_path = concat(path, "/t10k-labels-idx1-ubyte");
@@ -90,8 +99,8 @@ TrainData mnist_load(char *path)
 	data.n_rows = n_cols;
 	data.labels_testing = labels_test;
 	data.labels_training = labels_train;
-	data.images_testing = images_test;
-	data.images_training = images_train;
+	data.inputs_testing = images_test;
+	data.inputs_training = images_train;
 
 	/* Free all */
 	free(train_images_path);
@@ -102,6 +111,7 @@ TrainData mnist_load(char *path)
 	return data;
 }
 
+/* Concatenate two strings & return the result as a new one */
 void *concat(char *str1, char *str2)
 {
 	void *r = malloc(strlen(str1) + strlen(str2) + 1);
@@ -110,6 +120,7 @@ void *concat(char *str1, char *str2)
 	return r;
 }
 
+/* Load the MNIST dataset, create & train a network */
 int main(int argc, char *argv[])
 {
 	if (argc != 2) {
@@ -124,4 +135,3 @@ int main(int argc, char *argv[])
 	free_training_data(data);
 	destroy_network(net);
 }
-

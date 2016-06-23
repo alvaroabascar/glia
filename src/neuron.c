@@ -10,22 +10,27 @@
  *
  */
 
+/* Free the memory allocated for a TrainData struct. */
 void free_training_data(TrainData data)
 {
 	int i;
 	for (i = 0; i < data.n_train; i++) {
-		free(data.images_training[i]);
+		free(data.inputs_training[i]);
 	}
 	for (i = 0; i < data.n_test; i++) {
-		free(data.images_testing[i]);
+		free(data.inputs_testing[i]);
 	}
-	free(data.images_training);
-	free(data.images_testing);
+	free(data.inputs_training);
+	free(data.inputs_testing);
 	free(data.labels_testing);
 	free(data.labels_training);
 }
 
-/* Initialize & return a pointer to a new network */
+/* Initialize & return a pointer to a new network:
+ * n_layers: number of layers of the net, including input and output.
+ * sizes: array of int. sizes[i] indicates the number of neurons in
+ *		  the ith layer.
+ */
 Network *create_network(int n_layers, int *sizes)
 {
 	int i;
@@ -45,6 +50,7 @@ Network *create_network(int n_layers, int *sizes)
 	return net;
 }
 
+/* Free the memory assigned to a network. */
 void destroy_network(Network *net)
 {
 	int i;
