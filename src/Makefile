@@ -1,7 +1,7 @@
-objs = neuron.o
+objs = lib/utils.o lib/matrix.o neuron.o
 progs = mnist_loader
 CC = gcc
-CFLAGS = -I./mad/matrix/ -I. -I./lib
+CFLAGS = -I. -I./lib -g
 LDLIBS = -lm
 
 all:	$(progs)

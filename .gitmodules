@@ -1,3 +1,0 @@
-[submodule "src/mad"]
-	path = src/mad
-	url = ssh://git@github.com/alvaroabascar/mad

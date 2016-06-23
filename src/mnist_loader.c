@@ -6,7 +6,7 @@
 #include <neuron.h>
 
 /* Prototypes */
-train_data mnist_load(char *path);
+TrainData mnist_load(char *path);
 void *concat(char *str1, char *str2);
 
 uint8_t *load_labels(char *path, int *n_items)
@@ -58,7 +58,7 @@ uint8_t **load_images(char *path, int *n_items, int *n_rows, int *n_cols)
 	return images;
 }
 
-train_data mnist_load(char *path)
+TrainData mnist_load(char *path)
 {
 	int32_t n_train, n_test, n_rows, n_cols;
 	uint8_t *labels_train;
@@ -69,7 +69,7 @@ train_data mnist_load(char *path)
 	char *train_labels_path = concat(path, "/train-labels-idx1-ubyte");
 	char *test_labels_path = concat(path, "/t10k-labels-idx1-ubyte");
 	char *test_images_path = concat(path, "/t10k-images-idx3-ubyte");
-	train_data data;
+	TrainData data;
 	labels_train = load_labels(train_labels_path, &n_train);
 	fprintf(stdout, "Loaded %s: %d labels.\n", train_labels_path, n_train);
 
@@ -116,7 +116,12 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	char *path = argv[1];
-	train_data data = mnist_load(path);
+	TrainData data = mnist_load(path);
+
+	int sizes[3] = {768, 30, 10};
+	Network *net = create_network(3, sizes);
+
 	free_training_data(data);
+	destroy_network(net);
 }
 
