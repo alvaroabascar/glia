@@ -15,4 +15,12 @@ Matrix *create_matrix(int n_rows, int n_cols);
 
 void free_matrix(Matrix *mat);
 
+Matrix *matrix_prod(Matrix *a, Matrix *b);
+
+int matrix_cmp(Matrix *a, Matrix *b);
+
+void matrix_assign(Matrix *mat, ...);
+
+void matrix_print(Matrix *mat);
+
 #endif // MATRIX_H

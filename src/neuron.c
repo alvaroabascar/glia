@@ -53,6 +53,9 @@ Network *create_network(int n_layers, int *sizes)
 /* Free the memory assigned to a network. */
 void destroy_network(Network *net)
 {
+	if (net == NULL) {
+		return;
+	}
 	int i;
 	for (i = 0; i < (net->n_layers)-1; i++) {
 		free_matrix(net->weights[i]);
