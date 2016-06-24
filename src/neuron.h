@@ -13,8 +13,7 @@ typedef struct {
 	int n_train;
 	/* Number of testing cases. */
 	int n_test;
-	int n_rows;
-	int n_cols;
+	int inputs_size;
 	double **inputs_testing;;
 	double *labels_testing;
 	double **inputs_training;
@@ -37,11 +36,16 @@ typedef struct network {
 
 /*** Prototypes ***/
 
-void free_training_data(TrainData data);
+void free_training_data(TrainData *data);
+
+TrainData *subset_training_data(TrainData *data, int start, int end);
 
 Network *create_network(int n_layers, int *sizes);
 
 void destroy_network(Network *net);
+
+void SGD(Network *net, TrainData *data, int epochs,
+	 int mini_batch_size, double learning_rate);
 
 /*** End prototypes ***/
 

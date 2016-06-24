@@ -6,7 +6,7 @@
 #include <neuron.h>
 
 /* Prototypes */
-TrainData mnist_load(char *path);
+TrainData *mnist_load(char *path);
 void *concat(char *str1, char *str2);
 
 /* Load MNIST labels, given the file path. Return them as an "array"
@@ -42,6 +42,7 @@ double **load_images(char *path, int *n_items, int *n_rows, int *n_cols)
 	int32_t magic;
 	double **inputs;
 	FILE *stream = fopen(path, "r");
+	char *tmp_char;
 	if (!stream) {
 		fprintf(stderr, "Could not load file %s. Aborting :(.\n", path);
 		return NULL;
@@ -56,10 +57,15 @@ double **load_images(char *path, int *n_items, int *n_rows, int *n_cols)
 		*n_cols = __bswap_32(*n_cols);
 	}
 	inputs = malloc(sizeof(void **) * (*n_items));
-	for (i = 0; i < *n_items; i++) {
-		inputs[i] = malloc((*n_cols) * (*n_rows));
-		fread(inputs[i], 1, (*n_cols) * (*n_rows), stream);
+	tmp_char = malloc((*n_cols) * (*n_rows));
+	for (item = 0; item < *n_items; item++) {
+		inputs[item] = malloc((*n_cols) * (*n_rows) * sizeof(double));
+		fread(tmp_char, 1, (*n_cols) * (*n_rows), stream);
+		for (i = 0; i < (*n_cols) * (*n_rows); i++) {
+			inputs[item][i] = (double)tmp_char[i];
+		}
 	}
+	free(tmp_char);
 	fclose(stream);
 	return inputs;
 }
@@ -67,7 +73,7 @@ double **load_images(char *path, int *n_items, int *n_rows, int *n_cols)
 /* Load the mnist dataset given the folder path & result a struct with
  * all the data.
  */
-TrainData mnist_load(char *path)
+TrainData *mnist_load(char *path)
 {
 	int32_t n_train, n_test, n_rows, n_cols;
 	double *labels_train;
@@ -78,7 +84,7 @@ TrainData mnist_load(char *path)
 	char *train_labels_path = concat(path, "/train-labels-idx1-ubyte");
 	char *test_labels_path = concat(path, "/t10k-labels-idx1-ubyte");
 	char *test_images_path = concat(path, "/t10k-images-idx3-ubyte");
-	TrainData data;
+	TrainData *data = malloc(sizeof(TrainData));
 	labels_train = load_labels(train_labels_path, &n_train);
 	fprintf(stdout, "Loaded %s: %d labels.\n", train_labels_path, n_train);
 
@@ -93,14 +99,13 @@ TrainData mnist_load(char *path)
 	fprintf(stdout, "Loaded %s: %d %dx%d images.\n",
 			train_images_path, n_train, n_rows, n_cols);
 
-	data.n_train = n_train;
-	data.n_test = n_test;
-	data.n_cols = n_rows;
-	data.n_rows = n_cols;
-	data.labels_testing = labels_test;
-	data.labels_training = labels_train;
-	data.inputs_testing = images_test;
-	data.inputs_training = images_train;
+	data->n_train = n_train;
+	data->n_test = n_test;
+	data->inputs_size = n_rows * n_cols;
+	data->labels_testing = labels_test;
+	data->labels_training = labels_train;
+	data->inputs_testing = images_test;
+	data->inputs_training = images_train;
 
 	/* Free all */
 	free(train_images_path);
@@ -127,11 +132,12 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	char *path = argv[1];
-	TrainData data = mnist_load(path);
+	TrainData *data = mnist_load(path);
 
 	int sizes[3] = {768, 30, 10};
 	Network *net = create_network(3, sizes);
 
+	SGD(net, data, 30, 10, 3.0);
 	free_training_data(data);
 	destroy_network(net);
 }
