@@ -14,8 +14,10 @@ void *concat(char *str1, char *str2);
  */
 double *load_labels(char *path, int *n_items)
 {
+	int i;
 	int32_t magic;
-	void *labels;
+	char *labels;
+	double *labels_double;
 	FILE *stream = fopen(path, "r");
 	if (!stream) {
 		fprintf(stderr, "Could not load file %s. Aborting :(.\n", path);
@@ -30,7 +32,12 @@ double *load_labels(char *path, int *n_items)
 	labels = malloc(*n_items);
 	fread(labels, 1, *n_items, stream);
 	fclose(stream);
-	return labels;
+	labels_double = malloc(sizeof(double)*(*n_items));
+	for (i = 0; i < *n_items; i++) {
+		labels_double[i] = (double)labels[i];
+	}
+	free(labels);
+	return labels_double;
 }
 
 /* Load the MNIST images, given the file path. Return them as an

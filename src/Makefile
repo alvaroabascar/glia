@@ -1,4 +1,4 @@
-objs = lib/utils.o lib/matrix.o neuron.o
+objs = lib/utils.o lib/matrix.o lib/random.o neuron.o 
 progs = mnist_loader
 CC = gcc
 CFLAGS = -I. -I./lib -g

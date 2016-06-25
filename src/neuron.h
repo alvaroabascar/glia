@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "random.h"
 #include <matrix.h>
 
 #ifndef NEURON_H
@@ -40,6 +41,8 @@ void free_training_data(TrainData *data);
 
 TrainData *subset_training_data(TrainData *data, int start, int end);
 
+void shuffle_training_data(TrainData *data);
+
 Network *create_network(int n_layers, int *sizes);
 
 void destroy_network(Network *net);
@@ -48,6 +51,5 @@ void SGD(Network *net, TrainData *data, int epochs,
 	 int mini_batch_size, double learning_rate);
 
 /*** End prototypes ***/
-
 
 #endif // NEURON_H

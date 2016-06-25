@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+
 #include <utils.h>
 #include <neuron.h>
 #include <matrix.h>
+#include <random.h>
 
 /*
  *
@@ -27,6 +30,28 @@ void free_training_data(TrainData *data)
 	free(data);
 }
 
+/* Shuffle training data (inputs & labels) using the Fisher & Yates
+ * algorithm. Don't touch the testing data.
+ */
+void shuffle_training_data(TrainData *data)
+{
+    int i;
+    long j;
+	double tmp_label, *tmp_inputs;
+	srand(time(NULL));
+    for (i = 0; i < data->n_train - 1; i++) {
+	    j = random_in_range(i, data->n_train - 1);
+		/* Exchange labels[i] and labels[j] */
+		tmp_label = data->labels_training[i];
+		data->labels_training[i] = data->labels_training[j];
+		data->labels_training[j] = tmp_label;
+		/* Exchange inputs[i] and inputs[j] */
+		tmp_inputs = data->inputs_training[i];
+		data->inputs_training[i] = data->inputs_training[j];
+		data->inputs_training[j] = tmp_inputs;
+    }
+}
+
 /* Given a struct TrainData, a 'start' index and a number of items 'n',
  * return a subset of 'n' consecutive items, starting from 'start'.
  *
@@ -46,7 +71,6 @@ TrainData *subset_training_data(TrainData *data, int start, int n)
 	ndata->n_test = data->n_test;
 	ndata->inputs_size = data->inputs_size;
 	// Load testing
-	/////
 	ndata->inputs_testing = data->inputs_testing;
 	ndata->labels_testing = data->labels_testing;
 	ndata->inputs_training = data->inputs_training + start;
@@ -105,7 +129,7 @@ void SGD(Network *net, TrainData *data, int n_epochs,
 	TrainData *mini_batch;
 	/* Loop through each epoch */
 	for (epoch = 0; epoch < n_epochs; epoch++) {
-		fprintf(stderr, "EPOCH %d\n", epoch);
+		/* shuffle_training_data(data); */
 		for (batch = 0; batch < n_mini_batches; batch++) {
 			start = batch * mini_batch_size;
 			mini_batch = subset_training_data(data, start,
