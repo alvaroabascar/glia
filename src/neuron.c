@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 
 #include <utils.h>
 #include <neuron.h>
@@ -139,5 +140,40 @@ void SGD(Network *net, TrainData *data, int n_epochs,
 	}
 }
 
+/* Sigmoid function */
+double sigmoid(double x)
+{
+	return 1 / (1 + exp(-x));
+}
 
+/* Derivative of the sigmoid function */
+double sigmoid_prime(double x)
+{
+	return sigmoid(x) * (1 - sigmoid(x));
+}
 
+/* Vectorized version of the sigmoid function */
+Matrix *sigmoid_vect(Matrix *mat)
+{
+	int i, j;
+	Matrix *newmat = create_matrix(mat->n_rows, mat->n_cols);
+	for (i = 0; i < mat->n_rows; i++) {
+		for (j = 0; j < mat->n_cols; j++) {
+			newmat->data[i][j] = sigmoid(mat->data[i][j]);
+		}
+	}
+	return newmat;
+}
+
+/* Vectorized version of the derivative of the sigmoid function */
+Matrix *sigmoid_prime_vect(Matrix *mat)
+{
+	int i, j;
+	Matrix *newmat = create_matrix(mat->n_rows, mat->n_cols);
+	for (i = 0; i < mat->n_rows; i++) {
+		for (j = 0; j < mat->n_cols; j++) {
+			newmat->data[i][j] = sigmoid_prime(mat->data[i][j]);
+		}
+	}
+	return newmat;
+}

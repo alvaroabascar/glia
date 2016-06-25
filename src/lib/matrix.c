@@ -3,6 +3,9 @@
 #include <stdarg.h>
 #include "matrix.h"
 
+#define ABS(x) ((x > 0) ? (x) : (-x))
+#define MATRIX_CMP_PREC 1e-15
+
 /* Allocate memory for a matrix with n_rows rows and n_cols columns,
  * return a pointer to it. Must be freed with free_matrix(the_matrix)
  */
@@ -69,7 +72,9 @@ Matrix *matrix_prod(Matrix *a, Matrix *b)
 	return res;
 }
 
-/* Tests if two matrices are equal (returns 1 if equal, else 0) */
+/* Tests if two matrices are equal (returns 1 if equal, else 0).
+ * NOTE: if equal, they are equal to a precision MATRIX_CMP_PREC
+ */
 int matrix_cmp(Matrix *a, Matrix *b)
 {
 	if (a->n_rows != b->n_rows || a->n_cols != b->n_cols) {
@@ -78,7 +83,7 @@ int matrix_cmp(Matrix *a, Matrix *b)
 	int i, j;
 	for (i = 0; i < a->n_rows; i++) {
 		for (j = 0; j < a->n_cols; j++) {
-			if (a->data[i][j] != b->data[i][j]) {
+			if (ABS(a->data[i][j] - b->data[i][j]) > MATRIX_CMP_PREC) {
 				return 0;
 			}
 		}

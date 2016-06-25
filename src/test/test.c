@@ -72,14 +72,36 @@ void test_shuffle_training()
 	    train->labels_training[i] = (double)i;
 	}
 	train->n_test = 0;
-	for (i = 0; i < 3; i++) {
-		printf("%d -> %f\n", i, train->labels_training[i]);
-	}
 	shuffle_training_data(train);
-	for (i = 0; i < 3; i++) {
-		printf("%d -> %f\n", i, train->labels_training[i]);
-	}
 	free_training_data(train);
+}
+
+void test_sigmoid_vect()
+{
+	Matrix *mat = create_matrix(2, 2);
+	matrix_assign(mat, 1.0, 2.0,
+					   3.0, 4.0);
+	Matrix *sigmoid_mat = create_matrix(2, 2);
+	matrix_assign(sigmoid_mat, 0.7310585786300049, 0.8807970779778823,
+							   0.8807970779778823, 0.9820137900379085);
+
+	Matrix *sigmoid_prime_mat = create_matrix(2, 2);
+	matrix_assign(sigmoid_prime_mat, 0.19661193324148185,
+									 0.1049935854035065,
+  			   0.04517665973091214, 0.017662706213291118);
+
+	Matrix *result = sigmoid_vect(mat);
+	Matrix *result_prime = sigmoid_prime_vect(mat);
+	ASSERT("Vectorized sigmoid function works.",
+			matrix_cmp(sigmoid_mat, result));
+	ASSERT("Vectorized sigmoid prime function works.",
+			matrix_cmp(sigmoid_prime_mat, result_prime));
+
+	free_matrix(mat);
+	free_matrix(sigmoid_mat);
+	free_matrix(sigmoid_prime_mat);
+	free_matrix(result);
+	free_matrix(result_prime);
 }
 
 int main(int argc, char *argv[])
@@ -87,5 +109,6 @@ int main(int argc, char *argv[])
 	test_matrix_assign();
 	test_matrix_prod();
 	test_shuffle_training();
+	test_sigmoid_vect();
 	return 0;
 }

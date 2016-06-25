@@ -50,6 +50,11 @@ void destroy_network(Network *net);
 void SGD(Network *net, TrainData *data, int epochs,
 	 int mini_batch_size, double learning_rate);
 
+double sigmoid(double x);
+double sigmoid_prime(double x);
+Matrix *sigmoid_vect(Matrix *mat);
+Matrix *sigmoid_prime_vect(Matrix *mat);
+
 /*** End prototypes ***/
 
 #endif // NEURON_H
