@@ -17,6 +17,10 @@ void free_matrix(Matrix *mat);
 
 Matrix *matrix_prod(Matrix *a, Matrix *b);
 
+Matrix *entrywise_product(Matrix *a, Matrix *b);
+
+Matrix *matrix_add(Matrix *a, Matrix *b);
+
 int matrix_cmp(Matrix *a, Matrix *b);
 
 void matrix_assign(Matrix *mat, ...);

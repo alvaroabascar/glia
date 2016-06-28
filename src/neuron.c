@@ -140,6 +140,12 @@ void SGD(Network *net, TrainData *data, int n_epochs,
 	}
 }
 
+/* Set the inputs of the network and propagate until getting the output. */
+void feed_forward(Network *net, double *input, double *output)
+{
+	int i;
+}
+
 /* Sigmoid function */
 double sigmoid(double x)
 {

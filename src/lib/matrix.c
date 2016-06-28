@@ -3,8 +3,15 @@
 #include <stdarg.h>
 #include "matrix.h"
 
-#define ABS(x) ((x > 0) ? (x) : (-x))
-#define MATRIX_CMP_PREC 1e-15
+#define SAME_SHAPE_CHECK(fn, operation, a, b) \
+	if (a->n_rows != b->n_rows || a->n_cols != b->n_cols) { \
+		fprintf(stderr, "%s ERROR: cannot compute the %s of a %dx%d matrix and a %dx%d matrix. They must have the same shapes.\n", fn, operation, a->n_rows, a->n_cols, b->n_rows, b->n_cols); \
+		return NULL; \
+	}
+
+#define COPY_MATRIX_SHAPE(mat) create_matrix(mat->n_rows, mat->n_cols);
+#define ABS(x) (((x) >= 0) ? (x) : -(x))
+#define MATRIX_CMP_PREC 1e-8
 
 /* Allocate memory for a matrix with n_rows rows and n_cols columns,
  * return a pointer to it. Must be freed with free_matrix(the_matrix)
@@ -55,7 +62,7 @@ Matrix *matrix_prod(Matrix *a, Matrix *b)
 	int i, j;
 	int s;
 	if (a->n_cols != b->n_rows) {
-		fprintf(stderr, "matrix_prod ERROR: cannot multiply a %dx%d matrix b a %dx%d matrix.\n", a->n_rows, a->n_cols, b->n_rows, b->n_cols);
+		fprintf(stderr, "matrix_prod ERROR: cannot multiply a %dx%d matrix and a %dx%d matrix.\n", a->n_rows, a->n_cols, b->n_rows, b->n_cols);
 		return NULL;
 	}
 	Matrix *res = create_matrix(a->n_rows, b->n_cols);
@@ -67,6 +74,37 @@ Matrix *matrix_prod(Matrix *a, Matrix *b)
 				val += a->data[i][s] * b->data[s][j];
 			}
 			res->data[i][j] = val;
+		}
+	}
+	return res;
+}
+
+/* Entrywise or Hadamardt product: produces another matrix where each
+ * element ij is the product of elements ij of the original two
+ * matrices.
+ */
+Matrix *entrywise_product(Matrix *a, Matrix *b)
+{
+	int i, j;
+	Matrix *res = create_matrix(a->n_cols, b->n_cols);
+	SAME_SHAPE_CHECK("entrywise_product", "entrywise product", a, b);
+	for (i = 0; i < a->n_rows; i++) {
+		for (j = 0; j < a->n_cols; j++) {
+			res->data[i][j] = a->data[i][j] * b->data[i][j];
+		}
+	}
+	return res;
+}
+
+/* Add two matrices */
+Matrix *matrix_add(Matrix *a, Matrix *b)
+{
+	int i, j;
+	SAME_SHAPE_CHECK("matrix_add", "matrix addition", a, b);
+	Matrix *res = COPY_MATRIX_SHAPE(a);
+	for (i = 0; i < a->n_rows; i++) {
+		for (j = 0; j < a->n_cols; j++) {
+			res->data[i][j] = a->data[i][j] + b->data[i][j];
 		}
 	}
 	return res;

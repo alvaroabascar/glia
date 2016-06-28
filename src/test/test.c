@@ -76,39 +76,64 @@ void test_shuffle_training()
 	free_training_data(train);
 }
 
-void test_sigmoid_vect()
+void test_entrywise_prod()
 {
-	Matrix *mat = create_matrix(2, 2);
-	matrix_assign(mat, 1.0, 2.0,
-					   3.0, 4.0);
-	Matrix *sigmoid_mat = create_matrix(2, 2);
-	matrix_assign(sigmoid_mat, 0.7310585786300049, 0.8807970779778823,
-							   0.8807970779778823, 0.9820137900379085);
+	Matrix *m = create_matrix(2, 2);
+	Matrix *n = create_matrix(2, 2);
+	Matrix *x = create_matrix(2, 3);
+	Matrix *tmp = create_matrix(2, 2);
+	matrix_assign(tmp, 1.0, 4.0,
+					   9.0, 16.0);
 
-	Matrix *sigmoid_prime_mat = create_matrix(2, 2);
-	matrix_assign(sigmoid_prime_mat, 0.19661193324148185,
-									 0.1049935854035065,
-  			   0.04517665973091214, 0.017662706213291118);
+	matrix_assign(m, 1.0, 2.0,
+				   3.0, 4.0);
+	matrix_assign(n, 1.0, 2.0,
+				   3.0, 4.0);
 
-	Matrix *result = sigmoid_vect(mat);
-	Matrix *result_prime = sigmoid_prime_vect(mat);
-	ASSERT("Vectorized sigmoid function works.",
-			matrix_cmp(sigmoid_mat, result));
-	ASSERT("Vectorized sigmoid prime function works.",
-			matrix_cmp(sigmoid_prime_mat, result_prime));
+	Matrix *res = entrywise_product(m, x);
+	ASSERT("Entrywise product of matrix with different shapes returns NULL", res == NULL);
+	free_matrix(res);
 
-	free_matrix(mat);
-	free_matrix(sigmoid_mat);
-	free_matrix(sigmoid_prime_mat);
-	free_matrix(result);
-	free_matrix(result_prime);
+	res = entrywise_product(m, n);
+	ASSERT("Dummy entrywise product returns correct output.",
+			matrix_cmp(res, tmp));
+
+	free_matrix(m);
+	free_matrix(n);
+	free_matrix(x);
+	free_matrix(tmp);
+	free_matrix(res);
+}
+
+void test_matrix_addition()
+{
+	Matrix *a, *b, *c, *d;
+	a = create_matrix(2, 2);
+	b = create_matrix(2, 2);
+	d = create_matrix(2, 2);
+	c = create_matrix(2, 2);
+
+	matrix_assign(a, 1.0, 2.0,
+					 3.0, 4.0);
+	matrix_assign(b, 1.0, 2.0,
+					 3.0, 4.0);
+	matrix_assign(c, 2.0, 4.0,
+					 6.0, 8.0);
+
+	d = matrix_add(a, b);
+	ASSERT("Dummy matrix addition works.", matrix_cmp(c, d));
+	free_matrix(a);
+	free_matrix(b);
+	free_matrix(c);
+	free_matrix(d);
 }
 
 int main(int argc, char *argv[])
 {
+	test_shuffle_training();
 	test_matrix_assign();
 	test_matrix_prod();
-	test_shuffle_training();
-	test_sigmoid_vect();
+	test_entrywise_prod();
+	test_matrix_addition();
 	return 0;
 }
