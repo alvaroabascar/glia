@@ -163,4 +163,26 @@ void matrix_print(Matrix *mat)
 	}
 }
 
+/* Turn an array of n doubles into a nx1 matrix. */
+Matrix *array_to_matrix(double *array, int n)
+{
+	int i;
+	Matrix *m = create_matrix(n, 1);
+	for (i = 0; i < n; i++) {
+		m->data[i][0] = array[i];
+	}
+	return m;
+}
+
+/* Turn a nx1 matrix into an array of n elements. */
+void matrix_to_array(Matrix *mat, double *array)
+{
+	int i;
+	for (i = 0; i < mat->n_rows; i++) {
+		array[i] = mat->data[i][0];
+	}
+}
+
+
+
 /********** End matrix operations **********/

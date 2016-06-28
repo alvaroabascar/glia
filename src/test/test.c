@@ -3,6 +3,9 @@
 #include <test_utils.c>
 #include <neuron.h>
 
+#define ABS(X) ((X) >= 0 ? (X) : -(X))
+#define CMP(A, B) (ABS(A - (B)) < 1e-15)
+
 int test_matrix_prod()
 {
 	printf("\n** BLOCK matrix_prod **\n");
@@ -128,6 +131,23 @@ void test_matrix_addition()
 	free_matrix(d);
 }
 
+void test_matrix_to_array()
+{
+	double array[3] = {1.0, 2.0, 3.0};
+	Matrix *m = create_matrix(3, 1);
+	matrix_assign(m, 1.0, 2.0, 3.0);
+
+	Matrix *x = array_to_matrix(array, 3);
+	ASSERT("Array to matrix works.", matrix_cmp(x, m));
+
+	matrix_assign(m, 1.1, 2.2, 3.3);
+	matrix_to_array(m, array);
+	ASSERT("Matrix to array works.",
+			CMP(array[0], 1.10) && CMP(array[1], 2.20) && CMP(array[2], 3.30));
+	free_matrix(m);
+	free_matrix(x);
+}
+
 int main(int argc, char *argv[])
 {
 	test_shuffle_training();
@@ -135,5 +155,6 @@ int main(int argc, char *argv[])
 	test_matrix_prod();
 	test_entrywise_prod();
 	test_matrix_addition();
+	test_matrix_to_array();
 	return 0;
 }

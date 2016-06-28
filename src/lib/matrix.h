@@ -27,4 +27,8 @@ void matrix_assign(Matrix *mat, ...);
 
 void matrix_print(Matrix *mat);
 
+Matrix *array_to_matrix(double *array, int n);
+
+void matrix_to_array(Matrix *mat, double *array);
+
 #endif // MATRIX_H
