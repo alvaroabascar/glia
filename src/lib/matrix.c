@@ -3,10 +3,10 @@
 #include <stdarg.h>
 #include "matrix.h"
 
-#define SAME_SHAPE_CHECK(fn, operation, a, b) \
+#define SAME_SHAPE_CHECK(fn, operation, a, b, rval) \
 	if (a->n_rows != b->n_rows || a->n_cols != b->n_cols) { \
 		fprintf(stderr, "%s ERROR: cannot compute the %s of a %dx%d matrix and a %dx%d matrix. They must have the same shapes.\n", fn, operation, a->n_rows, a->n_cols, b->n_rows, b->n_cols); \
-		return NULL; \
+		return rval; \
 	}
 
 #define COPY_MATRIX_SHAPE(mat) create_matrix(mat->n_rows, mat->n_cols);
@@ -26,12 +26,12 @@ Matrix *create_matrix(int n_rows, int n_cols)
 	for (i = 0; i < n_rows; i++) {
 		mat->data[i] = malloc(sizeof(double)*n_cols);
 	}
-	fill_matrix(mat, 0);
+	matrix_fill(mat, 0);
 	return mat;
 }
 
 /* Given a matrix and a double, fill all the matrix with this value. */
-void fill_matrix(Matrix *mat, double value)
+void matrix_fill(Matrix *mat, double value)
 {
 	int i, j;
 	for (i = 0; i < mat->n_rows; i++) {
@@ -85,9 +85,9 @@ Matrix *matrix_prod(Matrix *a, Matrix *b)
  */
 Matrix *entrywise_product(Matrix *a, Matrix *b)
 {
+	SAME_SHAPE_CHECK("entrywise_product", "entrywise product", a, b, NULL);
 	int i, j;
-	Matrix *res = create_matrix(a->n_cols, b->n_cols);
-	SAME_SHAPE_CHECK("entrywise_product", "entrywise product", a, b);
+	Matrix *res = create_matrix(a->n_cols, a->n_rows);
 	for (i = 0; i < a->n_rows; i++) {
 		for (j = 0; j < a->n_cols; j++) {
 			res->data[i][j] = a->data[i][j] * b->data[i][j];
@@ -96,18 +96,52 @@ Matrix *entrywise_product(Matrix *a, Matrix *b)
 	return res;
 }
 
-/* Add two matrices */
-Matrix *matrix_add(Matrix *a, Matrix *b)
+int matrix_entrywise_product(Matrix *a, Matrix *b)
 {
+	SAME_SHAPE_CHECK("matrix_entrywise_product", "entrywise product", a, b, 0);
 	int i, j;
-	SAME_SHAPE_CHECK("matrix_add", "matrix addition", a, b);
-	Matrix *res = COPY_MATRIX_SHAPE(a);
 	for (i = 0; i < a->n_rows; i++) {
 		for (j = 0; j < a->n_cols; j++) {
-			res->data[i][j] = a->data[i][j] + b->data[i][j];
+			a->data[i][j] *= b->data[i][j];
 		}
 	}
-	return res;
+	return 1;
+}
+
+/* Add two matrices: a is altered */
+int matrix_add(Matrix *a, Matrix *b)
+{
+	SAME_SHAPE_CHECK("matrix_add", "matrix addition", a, b, 0);
+	int i, j;
+	for (i = 0; i < a->n_rows; i++) {
+		for (j = 0; j < a->n_cols; j++) {
+			a->data[i][j] += b->data[i][j];
+		}
+	}
+}
+
+/* Substract b from a: a is altered */
+int matrix_substract(Matrix *a, Matrix *b)
+{
+	SAME_SHAPE_CHECK("matrix_substract", "matrix substraction", a, b,
+					 0);
+	int i, j;
+	for (i = 0; i < a->n_rows; i++) {
+		for (j = 0; j < a->n_cols; j++) {
+			a->data[i][j] -= b->data[i][j];
+		}
+	}
+}
+
+/* Scalar product. */
+void matrix_multiply(Matrix *mat, double val)
+{
+	int i, j;
+	for (i = 0; i < mat->n_rows; i++) {
+		for (j = 0; j < mat->n_cols; j++) {
+			mat->data[i][j] *= val;
+		}
+	}
 }
 
 /* Tests if two matrices are equal (returns 1 if equal, else 0).
@@ -154,6 +188,7 @@ void matrix_assign(Matrix *mat, ...)
 void matrix_print(Matrix *mat)
 {
 	int i, j;
+	printf("_______\n");
 	for (i = 0; i < mat->n_rows; i++) {
 		for (j = 0; j < mat->n_cols; j++) {
 			printf("%f ", mat->data[i][j]);
@@ -161,6 +196,12 @@ void matrix_print(Matrix *mat)
 		}
 		printf("\n");
 	}
+	printf("------\n");
+}
+
+void matrix_print_shape(Matrix *mat)
+{
+	fprintf(stderr, "[%d x %d]\n", mat->n_rows, mat->n_cols);
 }
 
 /* Turn an array of n doubles into a nx1 matrix. */
@@ -181,6 +222,32 @@ void matrix_to_array(Matrix *mat, double *array)
 	for (i = 0; i < mat->n_rows; i++) {
 		array[i] = mat->data[i][0];
 	}
+}
+
+Matrix *transpose(Matrix *mat)
+{
+	int i, j;
+	int rows = mat->n_rows;
+	int cols = mat->n_cols;
+	Matrix *T = create_matrix(cols, rows);
+	for (i = 0; i < rows; i++) {
+		for (j = 0; j < cols; j++) {
+			T->data[j][i] = mat->data[i][j];
+		}
+	}
+	return T;
+}
+
+Matrix *matrix_copy(Matrix *mat)
+{
+	Matrix *new = COPY_MATRIX_SHAPE(mat);
+	int i, j;
+	for (i = 0; i < new->n_rows; i++) {
+		for (j = 0; j < new->n_cols; j++) {
+			new->data[i][j] = mat->data[i][j];
+		}
+	}
+	return new;
 }
 
 

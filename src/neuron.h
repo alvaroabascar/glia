@@ -16,9 +16,9 @@ typedef struct {
 	int n_test;
 	int inputs_size;
 	double **inputs_testing;;
-	double *labels_testing;
+	double **labels_testing;
 	double **inputs_training;
-	double *labels_training;
+	double **labels_training;
 } TrainData;
 
 /* Struct defining a neural network. Must be freed with
@@ -43,17 +43,27 @@ TrainData *subset_training_data(TrainData *data, int start, int end);
 
 void shuffle_training_data(TrainData *data);
 
-Network *create_network(int n_layers, int *sizes);
+Network *create_network(int n_layers, ...);
 
 void destroy_network(Network *net);
 
 void SGD(Network *net, TrainData *data, int epochs,
 	 int mini_batch_size, double learning_rate);
 
+void network_update_mini_batch(Network *net,
+		TrainData *mini_batch, double learning_rate);
+
+Matrix *feedforward(Network *net, double *input);
+
+void backpropagate(Network *net, double *inputs, double *outputs,
+				   MatrixList delta_weigths, MatrixList delta_biases);
+
 double sigmoid(double x);
 double sigmoid_prime(double x);
 Matrix *sigmoid_vect(Matrix *mat);
 Matrix *sigmoid_prime_vect(Matrix *mat);
+Matrix *sigmoid_prime_from_sigmoid_vect(Matrix *mat);
+Matrix *calculate_errors(Matrix *outputs, Matrix *activs);
 
 /*** End prototypes ***/
 

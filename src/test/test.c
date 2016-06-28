@@ -85,6 +85,7 @@ void test_entrywise_prod()
 	Matrix *n = create_matrix(2, 2);
 	Matrix *x = create_matrix(2, 3);
 	Matrix *tmp = create_matrix(2, 2);
+	Matrix *res;
 	matrix_assign(tmp, 1.0, 4.0,
 					   9.0, 16.0);
 
@@ -93,9 +94,8 @@ void test_entrywise_prod()
 	matrix_assign(n, 1.0, 2.0,
 				   3.0, 4.0);
 
-	Matrix *res = entrywise_product(m, x);
+	res = entrywise_product(m, x);
 	ASSERT("Entrywise product of matrix with different shapes returns NULL", res == NULL);
-	free_matrix(res);
 
 	res = entrywise_product(m, n);
 	ASSERT("Dummy entrywise product returns correct output.",
@@ -113,7 +113,6 @@ void test_matrix_addition()
 	Matrix *a, *b, *c, *d;
 	a = create_matrix(2, 2);
 	b = create_matrix(2, 2);
-	d = create_matrix(2, 2);
 	c = create_matrix(2, 2);
 
 	matrix_assign(a, 1.0, 2.0,
@@ -123,12 +122,11 @@ void test_matrix_addition()
 	matrix_assign(c, 2.0, 4.0,
 					 6.0, 8.0);
 
-	d = matrix_add(a, b);
-	ASSERT("Dummy matrix addition works.", matrix_cmp(c, d));
+	matrix_add(a, b);
+	ASSERT("Dummy matrix addition works.", matrix_cmp(c, a));
 	free_matrix(a);
 	free_matrix(b);
 	free_matrix(c);
-	free_matrix(d);
 }
 
 void test_matrix_to_array()
@@ -148,6 +146,18 @@ void test_matrix_to_array()
 	free_matrix(x);
 }
 
+void test_feed_forward()
+{
+	double inputs[3] = {1.0, 2.0, 3.0};
+	double outputs[2];
+	Network *net = create_network(3, 3, 10, 2);
+	feedforward(net, inputs, outputs);
+	/* Matrix *out = array_to_matrix(outputs, 2); */
+	/* matrix_print(out); */
+	/* free_matrix(out); */
+	destroy_network(net);
+}
+
 int main(int argc, char *argv[])
 {
 	test_shuffle_training();
@@ -156,5 +166,6 @@ int main(int argc, char *argv[])
 	test_entrywise_prod();
 	test_matrix_addition();
 	test_matrix_to_array();
+	test_feed_forward();
 	return 0;
 }
