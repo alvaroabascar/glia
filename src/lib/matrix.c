@@ -41,6 +41,16 @@ void matrix_fill(Matrix *mat, double value)
 	}
 }
 
+void matrix_fill_random(Matrix *mat)
+{
+	int i, j;
+	for (i = 0; i < mat->n_rows; i++) {
+		for (j = 0; j < mat->n_cols; j++) {
+			mat->data[i][j] = (double)rand() / (double)RAND_MAX ;
+		}
+	}
+}
+
 /* Free the memory allocated for a matrix */
 void free_matrix(Matrix *mat)
 {

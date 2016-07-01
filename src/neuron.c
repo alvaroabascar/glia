@@ -107,9 +107,9 @@ Network *create_network(int n_layers, ...)
 
 	for (i = 0; i < n_layers - 1; i++) {
 		net->weights[i] = create_matrix(sizes[i+1], sizes[i]);
-		matrix_fill(net->weights[i], 1.0);
+		matrix_fill_random(net->weights[i]);
 		net->biases[i] = create_matrix(sizes[i+1], 1);
-		matrix_fill(net->biases[i], 1.00);
+		matrix_fill_random(net->biases[i]);
 	}
 	return net;
 }
@@ -241,7 +241,13 @@ void backpropagate(Network *net, double *inputs, double *outputs,
 	for (i = 0; i < net->n_layers - 1; i++) {
 		zs[i+1] = matrix_prod(net->weights[i], as[i]);
 		matrix_add(zs[i+1], net->biases[i]);
-		as[i+1] = sigmoid_prime_vect(zs[i+1]);
+		/* fprintf(stderr, "ZS\n"); */
+		/* matrix_print_shape(zs[i+1]); */
+		/* matrix_print(zs[i+1]); */
+		as[i+1] = sigmoid_vect(zs[i+1]);
+		/* fprintf(stderr, "ACTIVS\n"); */
+		/* matrix_print_shape(as[i+1]); */
+		/* matrix_print(as[i+1]); */
 	}
 	/* Calculate errors in last layer */
 	outs = array_to_matrix(outputs, net->sizes[net->n_layers-1]);
@@ -263,15 +269,16 @@ void backpropagate(Network *net, double *inputs, double *outputs,
 		/* Errors in current layer */
 		errors_new = matrix_prod(weights_T, errors);
 		sigma_prime = sigmoid_prime_from_sigmoid_vect(as[i+1]);
+
+		/* matrix_print_shape(as[i+1]); */
+		/* matrix_print(as[i+1]); */
+
 		matrix_entrywise_product(errors_new, sigma_prime); 
 		as_T = transpose(as[i]);
 
-		/* matrix_print_shape(errors_new); */
-		/* matrix_print(errors_new); */
-		/* matrix_print_shape(as_T); */
-		/* matrix_print(as_T); */
 		delta_weights[i] = matrix_prod(errors_new, as_T);
 		delta_biases[i] = matrix_copy(errors_new);
+
 
 		free_matrix(errors);
 		free_matrix(weights_T);
@@ -292,13 +299,13 @@ void backpropagate(Network *net, double *inputs, double *outputs,
 /* Sigmoid function */
 double sigmoid(double x)
 {
-	return 1 / (1 + exp(-x));
+	return 1.0 / (1.0 + exp(-x));
 }
 
 /* Derivative of the sigmoid function */
 double sigmoid_prime(double x)
 {
-	return sigmoid(x) * (1 - sigmoid(x));
+	return sigmoid(x) * (1.0 - sigmoid(x));
 }
 
 /* Vectorized version of the sigmoid function */

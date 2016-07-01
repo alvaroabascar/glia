@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
 	fprintf(stderr, "Network created.\n");
 
 	/* matrix_print(array_to_matrix(data->inputs_training[0], 768)); */
-	SGD(net, data, 1, 10, 3.0);
+	SGD(net, data, 5, 10, 3.0);
 	fprintf(stderr, "SGD completed.\n");
 	free_training_data(data);
 	fprintf(stderr, "Data freed.\n");

@@ -11,6 +11,8 @@ typedef Matrix** MatrixList;
 
 void matrix_fill(Matrix *mat, double value);
 
+void matrix_fill_random(Matrix *mat);
+
 Matrix *create_matrix(int n_rows, int n_cols);
 
 void free_matrix(Matrix *mat);
