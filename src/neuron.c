@@ -107,7 +107,9 @@ Network *create_network(int n_layers, ...)
 
 	for (i = 0; i < n_layers - 1; i++) {
 		net->weights[i] = create_matrix(sizes[i+1], sizes[i]);
+		matrix_fill(net->weights[i], 1.0);
 		net->biases[i] = create_matrix(sizes[i+1], 1);
+		matrix_fill(net->biases[i], 1.00);
 	}
 	return net;
 }
@@ -136,6 +138,7 @@ void SGD(Network *net, TrainData *data, int n_epochs,
 
 	int epoch, start, batch;
     int	n_mini_batches = data->n_train / mini_batch_size;
+	double acc;
 	TrainData *mini_batch;
 	/* Loop through each epoch */
 	for (epoch = 0; epoch < n_epochs; epoch++) {
@@ -148,6 +151,8 @@ void SGD(Network *net, TrainData *data, int n_epochs,
 			free(mini_batch);
 		}
 		fprintf(stderr, "Epoch %d finished.\n", epoch);
+		acc = test_accuracy(net, data);
+		fprintf(stderr, "Accuracy: %.2f%%\n", acc * 100);
 	}
 }
 
@@ -181,16 +186,18 @@ void network_update_mini_batch(Network *net, TrainData *mini_batch,
 						   delta_biases);
 		for (j = 0; j < net->n_layers - 1; j++) {
 			matrix_add(nabla_weights[j], delta_weights[j]);
-			free_matrix(delta_weights[j]);
 			matrix_add(nabla_biases[j], delta_biases[j]);
+
+			free_matrix(delta_weights[j]);
 			free_matrix(delta_biases[j]);
 		}
 	}
 	for (j = 0; j < net->n_layers - 1; j++) {
 		matrix_multiply(nabla_weights[j],
-					    learning_rate/(mini_batch->n_train));
+					-learning_rate/((double)(mini_batch->n_train)));
 		matrix_add(net->weights[j], nabla_weights[j]);
-		matrix_multiply(nabla_biases[j], 1.0/(mini_batch->n_train));
+		matrix_multiply(nabla_biases[j],
+	                -learning_rate/((double)(mini_batch->n_train)));
 		matrix_add(net->biases[j], nabla_biases[j]);
 	}
 	for (i = 0; i < net->n_layers - 1; i++) {
@@ -238,19 +245,33 @@ void backpropagate(Network *net, double *inputs, double *outputs,
 	}
 	/* Calculate errors in last layer */
 	outs = array_to_matrix(outputs, net->sizes[net->n_layers-1]);
-	errors = calculate_errors(outs, as[net->n_layers-1]);
+
+	/* Calc error in output layer */
+	errors = cost_derivative(outs, as[net->n_layers-1]);
+	sigma_prime = sigmoid_prime_vect(zs[net->n_layers-1]);
+	matrix_entrywise_product(errors, sigma_prime);
+
+    delta_biases[net->n_layers-2] = matrix_copy(errors);
+	as_T = transpose(as[net->n_layers-2]);
+    delta_weights[net->n_layers-2] = matrix_prod(errors, as_T);
+
+	free_matrix(sigma_prime);
 	free_matrix(outs);
 	/* Backpropagate */
-	for (i = net->n_layers - 2; i >= 0; i--) {
-		weights_T = transpose(net->weights[i]);
+	for (i = net->n_layers - 3; i >= 0; i--) {
+		weights_T = transpose(net->weights[i+1]);
 		/* Errors in current layer */
 		errors_new = matrix_prod(weights_T, errors);
-		sigma_prime = sigmoid_prime_from_sigmoid_vect(as[i]);
+		sigma_prime = sigmoid_prime_from_sigmoid_vect(as[i+1]);
 		matrix_entrywise_product(errors_new, sigma_prime); 
 		as_T = transpose(as[i]);
 
-		delta_weights[i] = matrix_prod(errors, as_T);
-		delta_biases[i] = matrix_copy(errors);
+		/* matrix_print_shape(errors_new); */
+		/* matrix_print(errors_new); */
+		/* matrix_print_shape(as_T); */
+		/* matrix_print(as_T); */
+		delta_weights[i] = matrix_prod(errors_new, as_T);
+		delta_biases[i] = matrix_copy(errors_new);
 
 		free_matrix(errors);
 		free_matrix(weights_T);
@@ -318,11 +339,35 @@ Matrix *sigmoid_prime_from_sigmoid_vect(Matrix *mat)
 	return newmat;
 }
 
+double test_accuracy(Network *net, TrainData *data)
+{
+	int i;
+	double *input, *output, *correct_output;
+	Matrix *out_mat;
+	int n_ok = 0;
+	int s = data->outputs_size;
+	output = malloc(sizeof(double) * s);
+	for (i = 0; i < data->n_test; i++) {
+		input = data->inputs_testing[i];
+		correct_output = data->labels_testing[i];
+
+		out_mat = feedforward(net, input);
+		matrix_to_array(out_mat, output);
+		free_matrix(out_mat);
+
+		if (argmax(output, s) == argmax(correct_output, s)) {
+			n_ok += 1;
+		}
+	}
+	/* return 0.5; */
+	return ((double)n_ok) / ((double)(data->n_test));
+}
+
 /*
  * Compute the errors in the last layer, given the correct outputs and
  * the activations from the last layer as matrices.
  */
-Matrix *calculate_errors(Matrix *outputs, Matrix *activs)
+Matrix *cost_derivative(Matrix *outputs, Matrix *activs)
 {
 	Matrix *errs = create_matrix(outputs->n_rows, outputs->n_cols);
 	matrix_fill(errs, 0.0);

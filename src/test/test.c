@@ -60,25 +60,6 @@ int test_matrix_assign()
 	free_matrix(mat2);
 }
 
-void test_shuffle_training()
-{
-	int i;
-	TrainData *train = malloc(sizeof(TrainData));
-	train->n_train = 3;
-	train->inputs_training = malloc(sizeof(double *)*3);
-	train->labels_training = malloc(sizeof(double)*3);
-	for (i = 0; i < 3; i++) {
-	    train->inputs_training[i] = malloc(sizeof(double)*3);
-	    train->inputs_training[i][0] = (double)i;
-	    train->inputs_training[i][0] = (double)i;
-	    train->inputs_training[i][0] = (double)i;
-	    train->labels_training[i] = (double)i;
-	}
-	train->n_test = 0;
-	shuffle_training_data(train);
-	free_training_data(train);
-}
-
 void test_entrywise_prod()
 {
 	Matrix *m = create_matrix(2, 2);
@@ -151,16 +132,15 @@ void test_feed_forward()
 	double inputs[3] = {1.0, 2.0, 3.0};
 	double outputs[2];
 	Network *net = create_network(3, 3, 10, 2);
-	feedforward(net, inputs, outputs);
+	Matrix *out = feedforward(net, inputs);
 	/* Matrix *out = array_to_matrix(outputs, 2); */
-	/* matrix_print(out); */
+	matrix_print(out);
 	/* free_matrix(out); */
 	destroy_network(net);
 }
 
 int main(int argc, char *argv[])
 {
-	test_shuffle_training();
 	test_matrix_assign();
 	test_matrix_prod();
 	test_entrywise_prod();

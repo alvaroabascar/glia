@@ -53,7 +53,7 @@ double **load_images(char *path, int *n_items, int *n_rows, int *n_cols)
 	int32_t magic;
 	double **inputs;
 	FILE *stream = fopen(path, "r");
-	char *tmp_char;
+	uint8_t *tmp_uint8;
 	if (!stream) {
 		fprintf(stderr, "Could not load file %s. Aborting :(.\n", path);
 		return NULL;
@@ -68,15 +68,15 @@ double **load_images(char *path, int *n_items, int *n_rows, int *n_cols)
 		*n_cols = __bswap_32(*n_cols);
 	}
 	inputs = malloc(sizeof(void **) * (*n_items));
-	tmp_char = malloc((*n_cols) * (*n_rows));
+	tmp_uint8 = malloc((*n_cols) * (*n_rows));
 	for (item = 0; item < *n_items; item++) {
 		inputs[item] = malloc((*n_cols) * (*n_rows) * sizeof(double));
-		fread(tmp_char, 1, (*n_cols) * (*n_rows), stream);
+		fread(tmp_uint8, 1, (*n_cols) * (*n_rows), stream);
 		for (i = 0; i < (*n_cols) * (*n_rows); i++) {
-			inputs[item][i] = (double)tmp_char[i];
+			inputs[item][i] = (double)tmp_uint8[i];
 		}
 	}
-	free(tmp_char);
+	free(tmp_uint8);
 	fclose(stream);
 	return inputs;
 }
@@ -113,6 +113,7 @@ TrainData *mnist_load(char *path)
 	data->n_train = n_train;
 	data->n_test = n_test;
 	data->inputs_size = n_rows * n_cols;
+	data->outputs_size = 10;
 	data->labels_testing = labels_test;
 	data->labels_training = labels_train;
 	data->inputs_testing = images_test;
@@ -149,6 +150,7 @@ int main(int argc, char *argv[])
 	Network *net = create_network(3, 768, 30, 10);
 	fprintf(stderr, "Network created.\n");
 
+	/* matrix_print(array_to_matrix(data->inputs_training[0], 768)); */
 	SGD(net, data, 1, 10, 3.0);
 	fprintf(stderr, "SGD completed.\n");
 	free_training_data(data);

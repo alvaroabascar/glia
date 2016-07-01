@@ -15,6 +15,7 @@ typedef struct {
 	/* Number of testing cases. */
 	int n_test;
 	int inputs_size;
+	int outputs_size;
 	double **inputs_testing;;
 	double **labels_testing;
 	double **inputs_training;
@@ -63,7 +64,8 @@ double sigmoid_prime(double x);
 Matrix *sigmoid_vect(Matrix *mat);
 Matrix *sigmoid_prime_vect(Matrix *mat);
 Matrix *sigmoid_prime_from_sigmoid_vect(Matrix *mat);
-Matrix *calculate_errors(Matrix *outputs, Matrix *activs);
+Matrix *cost_derivative(Matrix *outputs, Matrix *activs);
+double test_accuracy(Network *net, TrainData *data);
 
 /*** End prototypes ***/
 

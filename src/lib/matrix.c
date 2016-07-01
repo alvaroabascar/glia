@@ -188,15 +188,15 @@ void matrix_assign(Matrix *mat, ...)
 void matrix_print(Matrix *mat)
 {
 	int i, j;
-	printf("_______\n");
+	fprintf(stderr, "_______\n");
 	for (i = 0; i < mat->n_rows; i++) {
 		for (j = 0; j < mat->n_cols; j++) {
-			printf("%f ", mat->data[i][j]);
+			fprintf(stderr, "%f ", mat->data[i][j]);
 						   /* j == (mat->n_cols - 1)? '\n': ' '); */
 		}
-		printf("\n");
+		fprintf(stderr, "\n");
 	}
-	printf("------\n");
+	fprintf(stderr, "------\n");
 }
 
 void matrix_print_shape(Matrix *mat)
