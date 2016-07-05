@@ -9,6 +9,8 @@
 #include <matrix.h>
 #include <random.h>
 
+#define DEBUG(mat) matrix_print_shape(mat); matrix_print(mat);
+
 /*
  *
  * A simple Neural Network library.
@@ -107,9 +109,13 @@ Network *create_network(int n_layers, ...)
 
 	for (i = 0; i < n_layers - 1; i++) {
 		net->weights[i] = create_matrix(sizes[i+1], sizes[i]);
-		matrix_fill_random(net->weights[i]);
+		/* Fill it with a gaussian (mean 0 variance 1) */
+		matrix_fill_gaussian_random(net->weights[i]);
+		/* matrix_fill(net->weights[i], 0.1); */
 		net->biases[i] = create_matrix(sizes[i+1], 1);
-		matrix_fill_random(net->biases[i]);
+		/* Fill it with a gaussian (mean 0 variance 1) */
+		/* matrix_fill(net->biases[i], 0.1); */
+		matrix_fill_gaussian_random(net->biases[i]);
 	}
 	return net;
 }
@@ -142,7 +148,7 @@ void SGD(Network *net, TrainData *data, int n_epochs,
 	TrainData *mini_batch;
 	/* Loop through each epoch */
 	for (epoch = 0; epoch < n_epochs; epoch++) {
-		/* shuffle_training_data(data); */
+		shuffle_training_data(data);
 		for (batch = 0; batch < n_mini_batches; batch++) {
 			start = batch * mini_batch_size;
 			mini_batch = subset_training_data(data, start,
@@ -160,6 +166,7 @@ void network_update_mini_batch(Network *net, TrainData *mini_batch,
 							   double learning_rate)
 {
 	int i, j;
+	double eta_over_n;
 	MatrixList nabla_weights, nabla_biases; // Cumulative gradients.
 	MatrixList delta_weights, delta_biases; // Temporal gradients.
 
@@ -192,12 +199,12 @@ void network_update_mini_batch(Network *net, TrainData *mini_batch,
 			free_matrix(delta_biases[j]);
 		}
 	}
+	eta_over_n = learning_rate / (double)(mini_batch->n_train);
 	for (j = 0; j < net->n_layers - 1; j++) {
-		matrix_multiply(nabla_weights[j],
-					-learning_rate/((double)(mini_batch->n_train)));
+		matrix_multiply(nabla_weights[j], -1.0 * eta_over_n);
 		matrix_add(net->weights[j], nabla_weights[j]);
-		matrix_multiply(nabla_biases[j],
-	                -learning_rate/((double)(mini_batch->n_train)));
+
+		matrix_multiply(nabla_biases[j], -1.0 * eta_over_n);
 		matrix_add(net->biases[j], nabla_biases[j]);
 	}
 	for (i = 0; i < net->n_layers - 1; i++) {
@@ -213,18 +220,16 @@ void network_update_mini_batch(Network *net, TrainData *mini_batch,
 /* Set the inputs of the network and propagate until getting the output. */
 Matrix *feedforward(Network *net, double *input)
 {
-	Matrix *zs = array_to_matrix(input, net->sizes[0]);
-	Matrix *zs_new, *tmp;
+	Matrix *as = array_to_matrix(input, net->sizes[0]);
+	Matrix *zs;
 	int i;
 	for (i = 0; i < net->n_layers - 1; i++) {
-		zs_new = matrix_prod(net->weights[i], zs);
-		matrix_add(zs_new, net->biases[i]);
+		zs = matrix_prod(net->weights[i], as);
+		matrix_add(zs, net->biases[i]);
+		as = sigmoid_vect(zs);
 		free_matrix(zs);
-		zs = zs_new;
 	}
-	zs_new = sigmoid_vect(zs);
-	free_matrix(zs);
-	return zs_new;
+	return as;
 }
 
 void backpropagate(Network *net, double *inputs, double *outputs,
@@ -241,18 +246,10 @@ void backpropagate(Network *net, double *inputs, double *outputs,
 	for (i = 0; i < net->n_layers - 1; i++) {
 		zs[i+1] = matrix_prod(net->weights[i], as[i]);
 		matrix_add(zs[i+1], net->biases[i]);
-		/* fprintf(stderr, "ZS\n"); */
-		/* matrix_print_shape(zs[i+1]); */
-		/* matrix_print(zs[i+1]); */
 		as[i+1] = sigmoid_vect(zs[i+1]);
-		/* fprintf(stderr, "ACTIVS\n"); */
-		/* matrix_print_shape(as[i+1]); */
-		/* matrix_print(as[i+1]); */
 	}
 	/* Calculate errors in last layer */
 	outs = array_to_matrix(outputs, net->sizes[net->n_layers-1]);
-
-	/* Calc error in output layer */
 	errors = cost_derivative(outs, as[net->n_layers-1]);
 	sigma_prime = sigmoid_prime_vect(zs[net->n_layers-1]);
 	matrix_entrywise_product(errors, sigma_prime);
@@ -268,17 +265,13 @@ void backpropagate(Network *net, double *inputs, double *outputs,
 		weights_T = transpose(net->weights[i+1]);
 		/* Errors in current layer */
 		errors_new = matrix_prod(weights_T, errors);
-		sigma_prime = sigmoid_prime_from_sigmoid_vect(as[i+1]);
-
-		/* matrix_print_shape(as[i+1]); */
-		/* matrix_print(as[i+1]); */
+		sigma_prime = sigmoid_prime_vect(zs[i+1]);
 
 		matrix_entrywise_product(errors_new, sigma_prime); 
 		as_T = transpose(as[i]);
 
 		delta_weights[i] = matrix_prod(errors_new, as_T);
 		delta_biases[i] = matrix_copy(errors_new);
-
 
 		free_matrix(errors);
 		free_matrix(weights_T);
@@ -366,7 +359,6 @@ double test_accuracy(Network *net, TrainData *data)
 			n_ok += 1;
 		}
 	}
-	/* return 0.5; */
 	return ((double)n_ok) / ((double)(data->n_test));
 }
 

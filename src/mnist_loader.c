@@ -73,7 +73,7 @@ double **load_images(char *path, int *n_items, int *n_rows, int *n_cols)
 		inputs[item] = malloc((*n_cols) * (*n_rows) * sizeof(double));
 		fread(tmp_uint8, 1, (*n_cols) * (*n_rows), stream);
 		for (i = 0; i < (*n_cols) * (*n_rows); i++) {
-			inputs[item][i] = (double)tmp_uint8[i];
+			inputs[item][i] = (double)tmp_uint8[i] / 255.0;
 		}
 	}
 	free(tmp_uint8);
@@ -151,7 +151,8 @@ int main(int argc, char *argv[])
 	fprintf(stderr, "Network created.\n");
 
 	/* matrix_print(array_to_matrix(data->inputs_training[0], 768)); */
-	SGD(net, data, 5, 10, 3.0);
+	fprintf(stderr, "Initial acc: %f\n", test_accuracy(net, data));
+	SGD(net, data, 30, 10, 3.0);
 	fprintf(stderr, "SGD completed.\n");
 	free_training_data(data);
 	fprintf(stderr, "Data freed.\n");

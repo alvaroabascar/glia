@@ -1,7 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include "matrix.h"
+#include <time.h>
+
+#include <random.h>
+#include <matrix.h>
 
 #define SAME_SHAPE_CHECK(fn, operation, a, b, rval) \
 	if (a->n_rows != b->n_rows || a->n_cols != b->n_cols) { \
@@ -41,12 +44,25 @@ void matrix_fill(Matrix *mat, double value)
 	}
 }
 
+/* Fill with uniform randoms between 0 and 1 */
 void matrix_fill_random(Matrix *mat)
 {
 	int i, j;
 	for (i = 0; i < mat->n_rows; i++) {
 		for (j = 0; j < mat->n_cols; j++) {
 			mat->data[i][j] = (double)rand() / (double)RAND_MAX ;
+		}
+	}
+}
+
+/* Fill with gaussian randoms between 0 and 1 */
+void matrix_fill_gaussian_random(Matrix *mat)
+{
+	int i, j;
+	long seed = time(NULL);
+	for (i = 0; i < mat->n_rows; i++) {
+		for (j = 0; j < mat->n_cols; j++) {
+			mat->data[i][j] = gauss0(&seed);
 		}
 	}
 }
