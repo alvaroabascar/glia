@@ -17,9 +17,13 @@ void matrix_fill_gaussian_random(Matrix *mat);
 
 Matrix *create_matrix(int n_rows, int n_cols);
 
+Matrix *create_matrix_zeros(int n_rows, int n_cols);
+
 void free_matrix(Matrix *mat);
 
 Matrix *matrix_prod(Matrix *a, Matrix *b);
+
+Matrix *matrix_prod_optim(Matrix *a, Matrix *b);
 
 void matrix_multiply(Matrix *mat, double val);
 

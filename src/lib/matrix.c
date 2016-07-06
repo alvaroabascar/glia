@@ -19,6 +19,26 @@
 /* Allocate memory for a matrix with n_rows rows and n_cols columns,
  * return a pointer to it. Must be freed with free_matrix(the_matrix)
  */
+Matrix *create_matrix_zeros(int n_rows, int n_cols)
+{
+	int i, j;
+	Matrix *mat = malloc(sizeof(Matrix));
+	mat->n_rows = n_rows;
+	mat->n_cols = n_cols;
+	mat->data = malloc(sizeof(double *)*n_rows);
+	for (i = 0; i < n_rows; i++) {
+		mat->data[i] = malloc(sizeof(double)*n_cols);
+		for (j = 0; j < n_cols; j++) {
+			mat->data[i][j] = 0.0;
+		}
+	}
+	matrix_fill(mat, 0);
+	return mat;
+}
+
+/* Allocate memory for a matrix with n_rows rows and n_cols columns,
+ * return a pointer to it. Must be freed with free_matrix(the_matrix)
+ */
 Matrix *create_matrix(int n_rows, int n_cols)
 {
 	int i;
@@ -32,6 +52,7 @@ Matrix *create_matrix(int n_rows, int n_cols)
 	matrix_fill(mat, 0);
 	return mat;
 }
+
 
 /* Given a matrix and a double, fill all the matrix with this value. */
 void matrix_fill(Matrix *mat, double value)
@@ -95,6 +116,34 @@ Matrix *matrix_prod(Matrix *a, Matrix *b)
 	Matrix *res = create_matrix(nr, nc);
 	double val;
 	for (i = 0; i < nr; i++) {
+		for (j = 0; j < nc; j++) {
+			val = 0.0;
+			for (s = 0; s < a->n_cols; s++) {
+				val += a->data[i][s] * b->data[s][j];
+			}
+			res->data[i][j] = val;
+		}
+	}
+	return res;
+}
+
+/* Like matrix_prod, but uglier code & optimized */
+Matrix *matrix_prod_optim(Matrix *a, Matrix *b)
+{
+	int i, j, nc, nr, s;
+	nc = b->n_cols;
+	nr = a->n_rows;
+	/* if (a->n_cols != b->n_rows) { */
+	/* 	fprintf(stderr, "matrix_prod ERROR: cannot multiply a %dx%d matrix and a %dx%d matrix.\n", a->n_rows, a->n_cols, b->n_rows, b->n_cols); */
+	/* 	return NULL; */
+	/* } */
+	Matrix *res = malloc(sizeof(Matrix));
+	res->n_rows = nr;
+	res->n_cols = nc;
+	res->data = malloc(sizeof(double)*nr);
+	double val;
+	for (i = 0; i < nr; i++) {
+		res->data[i] = malloc(sizeof(double) * nc);
 		for (j = 0; j < nc; j++) {
 			val = 0.0;
 			for (s = 0; s < a->n_cols; s++) {

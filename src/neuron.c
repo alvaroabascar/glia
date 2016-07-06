@@ -177,11 +177,9 @@ void network_update_mini_batch(Network *net, TrainData *mini_batch,
 
 	/* Initialize gradient of weights and biases as zero. */
 	for (i = 0; i < net->n_layers - 1; i++) {
-		nabla_weights[i] = create_matrix(net->sizes[i+1],
+		nabla_weights[i] = create_matrix_zeros(net->sizes[i+1],
 										 net->sizes[i]);
-		matrix_fill(nabla_weights[i], 0.0);
-		nabla_biases[i] = create_matrix(net->sizes[i+1], 1);
-		matrix_fill(nabla_biases[i], 0.0);
+		nabla_biases[i] = create_matrix_zeros(net->sizes[i+1], 1);
 	}
 	/* backpropagate, calculate gradient for each training input & add
 	 * it to the cumulative gradient.
@@ -224,7 +222,7 @@ Matrix *feedforward(Network *net, double *input)
 	Matrix *zs;
 	int i;
 	for (i = 0; i < net->n_layers - 1; i++) {
-		zs = matrix_prod(net->weights[i], as);
+		zs = matrix_prod_optim(net->weights[i], as);
 		matrix_add(zs, net->biases[i]);
 		as = sigmoid_vect(zs);
 		free_matrix(zs);
@@ -244,7 +242,7 @@ void backpropagate(Network *net, double *inputs, double *outputs,
 	as[0] = array_to_matrix(inputs, net->sizes[0]);
 	zs[0] = create_matrix(1, 1); // unused
 	for (i = 0; i < net->n_layers - 1; i++) {
-		zs[i+1] = matrix_prod(net->weights[i], as[i]);
+		zs[i+1] = matrix_prod_optim(net->weights[i], as[i]);
 		matrix_add(zs[i+1], net->biases[i]);
 		as[i+1] = sigmoid_vect(zs[i+1]);
 	}
@@ -256,7 +254,7 @@ void backpropagate(Network *net, double *inputs, double *outputs,
 
     delta_biases[net->n_layers-2] = matrix_copy(errors);
 	as_T = transpose(as[net->n_layers-2]);
-    delta_weights[net->n_layers-2] = matrix_prod(errors, as_T);
+    delta_weights[net->n_layers-2] = matrix_prod_optim(errors, as_T);
 
 	free_matrix(sigma_prime);
 	free_matrix(outs);
@@ -264,13 +262,13 @@ void backpropagate(Network *net, double *inputs, double *outputs,
 	for (i = net->n_layers - 3; i >= 0; i--) {
 		weights_T = transpose(net->weights[i+1]);
 		/* Errors in current layer */
-		errors_new = matrix_prod(weights_T, errors);
+		errors_new = matrix_prod_optim(weights_T, errors);
 		sigma_prime = sigmoid_prime_vect(zs[i+1]);
 
 		matrix_entrywise_product(errors_new, sigma_prime); 
 		as_T = transpose(as[i]);
 
-		delta_weights[i] = matrix_prod(errors_new, as_T);
+		delta_weights[i] = matrix_prod_optim(errors_new, as_T);
 		delta_biases[i] = matrix_copy(errors_new);
 
 		free_matrix(errors);
@@ -369,7 +367,6 @@ double test_accuracy(Network *net, TrainData *data)
 Matrix *cost_derivative(Matrix *outputs, Matrix *activs)
 {
 	Matrix *errs = create_matrix(outputs->n_rows, outputs->n_cols);
-	matrix_fill(errs, 0.0);
 	matrix_add(errs, activs);
 	matrix_substract(errs, outputs);
 	return errs;
