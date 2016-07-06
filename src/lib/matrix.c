@@ -85,16 +85,17 @@ void free_matrix(Matrix *mat)
 
 Matrix *matrix_prod(Matrix *a, Matrix *b)
 {
-	int i, j;
-	int s;
-	if (a->n_cols != b->n_rows) {
-		fprintf(stderr, "matrix_prod ERROR: cannot multiply a %dx%d matrix and a %dx%d matrix.\n", a->n_rows, a->n_cols, b->n_rows, b->n_cols);
-		return NULL;
-	}
-	Matrix *res = create_matrix(a->n_rows, b->n_cols);
+	int i, j, nc, nr, s;
+	nc = b->n_cols;
+	nr = a->n_rows;
+	/* if (a->n_cols != b->n_rows) { */
+	/* 	fprintf(stderr, "matrix_prod ERROR: cannot multiply a %dx%d matrix and a %dx%d matrix.\n", a->n_rows, a->n_cols, b->n_rows, b->n_cols); */
+	/* 	return NULL; */
+	/* } */
+	Matrix *res = create_matrix(nr, nc);
 	double val;
-	for (i = 0; i < a->n_rows; i++) {
-		for (j = 0; j < b->n_cols; j++) {
+	for (i = 0; i < nr; i++) {
+		for (j = 0; j < nc; j++) {
 			val = 0.0;
 			for (s = 0; s < a->n_cols; s++) {
 				val += a->data[i][s] * b->data[s][j];
@@ -137,7 +138,7 @@ int matrix_entrywise_product(Matrix *a, Matrix *b)
 /* Add two matrices: a is altered */
 int matrix_add(Matrix *a, Matrix *b)
 {
-	SAME_SHAPE_CHECK("matrix_add", "matrix addition", a, b, 0);
+	/* SAME_SHAPE_CHECK("matrix_add", "matrix addition", a, b, 0); */
 	int i, j;
 	for (i = 0; i < a->n_rows; i++) {
 		for (j = 0; j < a->n_cols; j++) {

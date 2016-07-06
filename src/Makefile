@@ -1,5 +1,5 @@
 objs = lib/utils.o lib/matrix.o lib/random.o neuron.o 
-progs = mnist_loader tiny
+progs = mnist_test tiny
 CC = gcc
 CFLAGS = -I. -I./lib -g -pg
 LDLIBS = -lm
@@ -9,6 +9,6 @@ all:	$(progs)
 clean:
 	rm $(objs) $(progs)
 
-mnist_loader: $(objs)
+mnist_test: $(objs)
 
-tiny: $(objs)
+tiny_test: $(objs)

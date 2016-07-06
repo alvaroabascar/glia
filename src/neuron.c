@@ -199,12 +199,12 @@ void network_update_mini_batch(Network *net, TrainData *mini_batch,
 			free_matrix(delta_biases[j]);
 		}
 	}
-	eta_over_n = learning_rate / (double)(mini_batch->n_train);
+	eta_over_n = -learning_rate / (double)(mini_batch->n_train);
 	for (j = 0; j < net->n_layers - 1; j++) {
-		matrix_multiply(nabla_weights[j], -1.0 * eta_over_n);
+		matrix_multiply(nabla_weights[j], eta_over_n);
 		matrix_add(net->weights[j], nabla_weights[j]);
 
-		matrix_multiply(nabla_biases[j], -1.0 * eta_over_n);
+		matrix_multiply(nabla_biases[j], eta_over_n);
 		matrix_add(net->biases[j], nabla_biases[j]);
 	}
 	for (i = 0; i < net->n_layers - 1; i++) {
