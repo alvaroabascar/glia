@@ -249,14 +249,11 @@ void backpropagate(Network *net, double *inputs, double *outputs,
 	/* Calculate errors in last layer */
 	outs = array_to_matrix(outputs, net->sizes[net->n_layers-1]);
 	errors = cost_derivative(outs, as[net->n_layers-1]);
-	sigma_prime = sigmoid_prime_vect(zs[net->n_layers-1]);
-	matrix_entrywise_product(errors, sigma_prime);
 
     delta_biases[net->n_layers-2] = matrix_copy(errors);
 	as_T = transpose(as[net->n_layers-2]);
     delta_weights[net->n_layers-2] = matrix_prod_optim(errors, as_T);
 
-	free_matrix(sigma_prime);
 	free_matrix(outs);
 	/* Backpropagate */
 	for (i = net->n_layers - 3; i >= 0; i--) {
@@ -363,6 +360,7 @@ double test_accuracy(Network *net, TrainData *data)
 /*
  * Compute the errors in the last layer, given the correct outputs and
  * the activations from the last layer as matrices.
+ * Returns the cross-entropy derivative.
  */
 Matrix *cost_derivative(Matrix *outputs, Matrix *activs)
 {
