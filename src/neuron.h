@@ -49,10 +49,11 @@ Network *create_network(int n_layers, ...);
 void destroy_network(Network *net);
 
 void SGD(Network *net, TrainData *data, int epochs,
-	 int mini_batch_size, double learning_rate);
+	 int mini_batch_size, double learning_rate, double lambda);
 
 void network_update_mini_batch(Network *net,
-		TrainData *mini_batch, double learning_rate);
+		TrainData *mini_batch, double learning_rate, double lambda,
+		int N_total);
 
 Matrix *feedforward(Network *net, double *input);
 

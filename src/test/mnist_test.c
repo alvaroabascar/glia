@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
 
 	/* matrix_print(array_to_matrix(data->inputs_training[0], 768)); */
 	fprintf(stderr, "Initial acc: %f%%\n", 100*test_accuracy(net, data));
-	SGD(net, data, 1, 10, 3.0);
+	SGD(net, data, 30, 10, 0.5, 5.0);
 	fprintf(stderr, "SGD completed.\n");
 	free_training_data(data);
 	fprintf(stderr, "Data freed.\n");

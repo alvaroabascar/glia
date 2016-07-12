@@ -139,7 +139,7 @@ void destroy_network(Network *net)
 
 /* Perform stochastic gradient descent. */
 void SGD(Network *net, TrainData *data, int n_epochs,
-		 int mini_batch_size, double learning_rate)
+		 int mini_batch_size, double learning_rate, double lambda)
 {
 
 	int epoch, start, batch;
@@ -153,7 +153,8 @@ void SGD(Network *net, TrainData *data, int n_epochs,
 			start = batch * mini_batch_size;
 			mini_batch = subset_training_data(data, start,
 			                                  mini_batch_size);
-			network_update_mini_batch(net, mini_batch, learning_rate);
+			network_update_mini_batch(net, mini_batch, learning_rate,
+									  lambda, data->n_train);
 			free(mini_batch);
 		}
 		fprintf(stderr, "Epoch %d finished.\n", epoch);
@@ -163,10 +164,59 @@ void SGD(Network *net, TrainData *data, int n_epochs,
 }
 
 void network_update_mini_batch(Network *net, TrainData *mini_batch,
-							   double learning_rate)
+							   double learning_rate, double lambda,
+							   int N_total)
 {
+	/* 
+	 * Update the weights and biases of the network using a mini batch of
+	 * N elements of the training set.
+	 *
+	 * **********************************************************************
+	 * INPUTS:
+	 *
+	 * net -> the network.
+	 * mini_batch -> a subset of the training set.
+	 * learning_rate -> the learning rate (eta).
+	 * lambda -> the regularization parameter (for L2 regularization).
+	 * **********************************************************************
+	 *
+	 * Explanation of the procedure:
+	 * ----------------------------
+	 *
+	 * Backpropagation is performed for each input of the batch, obtaining the
+	 * gradients for the weights and biases. All the gradients are summed
+	 * together in nabla_weights and nabla_biases.
+	 *
+	 * When lambda = 0 (no L2 regularization) the weights and biases are
+	 * updated according to the formula:
+	 *
+	 * W = W - (eta/N)*(nabla_weights)
+	 * B = B - (eta/N)*(nabla_biases)
+	 *
+	 * - N = number of items in the training set
+	 * - eta = learning rate
+	 * - W = weights
+	 * - B = biases
+	 * - nabla_weights, nabla_biases = sum of gradients with respect to weights
+	 * and biases.
+	 *
+	 * When lambda != 0, we have L2 regularization. The formula for the biases
+	 * remains the same, but for the weights it becomes:
+	 *
+	 * W = W - (eta/N_total)*(nabla_weights) - (eta*lambda/N)*W
+	 *
+	 * Here, N_total = total number of items in the training set
+	 *
+	 * This is equal to:
+	 *
+	 * W = (1 - eta*lambda/N_total)*W - (eta/N)*(nabla_weights)
+	 *
+	 * In the current implementation, we first modify W according to the first
+	 * term, then update it normally using the gradients.
+	 *
+	 */
 	int i, j;
-	double eta_over_n;
+	double eta_over_n, l2_term;
 	MatrixList nabla_weights, nabla_biases; // Cumulative gradients.
 	MatrixList delta_weights, delta_biases; // Temporal gradients.
 
@@ -185,10 +235,12 @@ void network_update_mini_batch(Network *net, TrainData *mini_batch,
 	 * it to the cumulative gradient.
 	 */
 	for (i = 0; i < mini_batch->n_train; i++) {
+		/* 1. Calculate the gradient for a single input */
 		backpropagate(net, mini_batch->inputs_training[i],
 						   mini_batch->labels_training[i],
 						   delta_weights,
 						   delta_biases);
+		/* 2. Add it to the cumulative gradients. */
 		for (j = 0; j < net->n_layers - 1; j++) {
 			matrix_add(nabla_weights[j], delta_weights[j]);
 			matrix_add(nabla_biases[j], delta_biases[j]);
@@ -197,8 +249,15 @@ void network_update_mini_batch(Network *net, TrainData *mini_batch,
 			free_matrix(delta_biases[j]);
 		}
 	}
+	/* Update weights with the formula:
+	 * W = (1 - eta*lambda/N_TOTAL)*W - (eta/N)*(nabla_weights) */
+
+	l2_term = (1 - learning_rate * lambda / (double)N_total);
 	eta_over_n = -learning_rate / (double)(mini_batch->n_train);
 	for (j = 0; j < net->n_layers - 1; j++) {
+		/* First: apply the first term: W = W * (1 - eta*lambda/N_TOTAL) */
+		matrix_multiply(net->weights[j], l2_term); 
+		/* Second: substract the gradient (add -(eta/N)*nabla_weight) */
 		matrix_multiply(nabla_weights[j], eta_over_n);
 		matrix_add(net->weights[j], nabla_weights[j]);
 
